@@ -4,7 +4,7 @@
   tasks:
 
   - name: Register SLES 15
-    ansible.builtin.shell: SUSEConnect -r A0B3D695F8C57FA3 denisfox@mail.ru
+    ansible.builtin.shell: SUSEConnect -r 
     args:
       executable: /bin/bash
 
