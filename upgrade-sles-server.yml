@@ -1,0 +1,112 @@
+---
+- hosts: server
+  become: true
+  tasks:
+
+  - name: Register SLES 15
+    ansible.builtin.shell: SUSEConnect -r A0B3D695F8C57FA3 denisfox@mail.ru
+    args:
+      executable: /bin/bash
+
+  - name: Activate -== Desktop Applications Module 15 SP2 x86_64 ==-
+    ansible.builtin.shell: SUSEConnect -p sle-module-desktop-applications/15.2/x86_64
+    args:
+      executable: /bin/bash
+
+  - name: Activate -== Development Tools Module 15 SP2 x86_64 ==-
+    ansible.builtin.shell: SUSEConnect -p sle-module-development-tools/15.2/x86_64
+    args:
+      executable: /bin/bash
+
+  - name: Activate -== Python 2 Module 15 SP2 x86_64 ==-
+    ansible.builtin.shell: SUSEConnect -p sle-module-python2/15.2/x86_64
+    args:
+      executable: /bin/bash
+
+  - name: Activate -== SUSE Package Hub 15 SP2 x86_64 ==-
+    ansible.builtin.shell: SUSEConnect -p PackageHub/15.2/x86_64
+    args:
+      executable: /bin/bash
+
+  - name: Activate -== Legacy Module 15 SP2 x86_64 ==-
+    ansible.builtin.shell: SUSEConnect -p sle-module-legacy/15.2/x86_64
+    args:
+      executable: /bin/bash
+
+  - name: Update all packages
+    zypper:
+      name: '*'
+      state: latest
+
+  - name: Install the yast2 package
+    zypper:
+      name: patterns-yast-yast2_basis
+      state: present
+
+  - name: Install the bzip2 package
+    zypper:
+      name: bzip2
+      state: present
+
+#  - name: Install the kernel-source package
+#    zypper:
+#      name: kernel-source
+#      state: present
+
+#  - name: Install the kernel-syms package
+#    zypper:
+#      name: kernel-syms
+#      state: present
+
+#  - name: Install the automake package
+#    zypper:
+#      name: automake
+#      state: present
+
+#  - name: Install the gcc package
+#    zypper:
+#      name: gcc
+#      state: present
+
+  - name: Set DNS1
+    ansible.builtin.shell: yast2 dns edit nameserver1=10.1.60.17
+    args:
+      executable: /bin/bash
+  - name: Set DNS2
+    ansible.builtin.shell: yast2 dns edit nameserver2=10.1.60.2
+    args:
+      executable: /bin/bash
+  - name: Set DNS3
+    ansible.builtin.shell: yast2 dns edit nameserver3=8.8.8.8
+    args:
+      executable: /bin/bash
+
+#  - name: Set Search domain
+#    ansible.builtin.shell: yast2 dns edit domainsearch=mos.tmk.group.local
+#    args:
+#      executable: /bin/bash
+
+  - name: Check if a reboot is needed on all SUSE/OpenSUSE based servers
+    register: linux_reboot_required_file
+    stat: path=/boot/do_purge_kernels get_md5=no
+
+  - name: Reboot the SUSE box if kernel updated
+    reboot:
+      msg: "Reboot initiated by Ansible for kernel updates"
+      connect_timeout: 5
+      reboot_timeout: 300
+      pre_reboot_delay: 0
+      post_reboot_delay: 30
+      test_command: uptime
+    when: linux_reboot_required_file.stat.exists
+    become: True
+
+#  - name: Apply all available patches
+#    zypper:
+#      name: '*'
+#      state: latest
+#      type: patch
+#    become: True
+
+
+...
